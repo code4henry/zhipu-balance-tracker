@@ -1,0 +1,26 @@
+{
+  "appId": "com.zhipu.balance",
+  "appName": "智谱余额",
+  "webDir": "public",
+  "server": {
+    "url": "https://zhipu-balance-tracker-production.up.railway.app",
+    "cleartext": true
+  },
+  "ios": {
+    "contentInset": false,
+    "cordovaWebViewBuildFlags": {
+      "ENABLE_BITCODE": "NO"
+    },
+    "scheme": "zhipubalance"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#4F46E5",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    }
+  }
+}
