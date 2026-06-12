@@ -321,6 +321,12 @@ function renderZhipuUsageResult(data) {
     const resultDiv = document.getElementById('zhipuUsageResult');
 
     let html = `<div class="usage-level">📦 ${data.level === 'pro' ? 'Pro 版本' : '标准版本'}</div>`;
+
+    // 添加图表容器
+    html += '<div class="usage-chart-container">';
+    html += '<canvas id="usageChart" width="300" height="200"></canvas>';
+    html += '</div>';
+
     html += '<div class="usage-plans">';
 
     data.plans.forEach(plan => {
@@ -348,6 +354,82 @@ function renderZhipuUsageResult(data) {
     html += '</div>';
 
     resultDiv.innerHTML = html;
+
+    // 创建图表
+    setTimeout(() => {
+        createUsageChart(data.plans);
+    }, 100);
+}
+
+// 创建使用情况图表
+function createUsageChart(plans) {
+    const ctx = document.getElementById('usageChart');
+    if (!ctx) return;
+
+    // 准备数据
+    const labels = plans.map(p => p.name);
+    const usedData = plans.map(p => p.used);
+    const remainingData = plans.map(p => p.remaining);
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '已使用',
+                    data: usedData,
+                    backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: '剩余',
+                    data: remainingData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: '智谱 Coding Plan 使用情况',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    padding: {
+                        bottom: 20
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 // 设置智谱额度查询表单

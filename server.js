@@ -18,6 +18,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// 测试页面
+app.get('/test', (req, res) => {
+  res.sendFile(path.join(__dirname, 'test-zhipu-api.html'));
+});
+
 // 所有其他请求返回 index.html（支持前端路由）
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
