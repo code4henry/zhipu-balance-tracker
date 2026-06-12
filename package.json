@@ -5,7 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "electron": "electron .",
+    "electron-dev": "NODE_ENV=development electron .",
+    "build": "electron-builder -m"
   },
   "dependencies": {
     "@capacitor/cli": "^8.4.0",
@@ -14,6 +17,10 @@
     "axios": "^1.6.0",
     "cors": "^2.8.5",
     "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.3"
   },
   "engines": {
     "node": ">=18.x"
