@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     registerServiceWorker();
     loadBalances();
     setupForm();
+    setupZhipuUsageForm();
     setupAutoRefresh();
 });
 
@@ -263,8 +264,106 @@ function showError(message) {
     showToast('❌ ' + message);
 }
 
+// 智谱额度查询相关函数
+function openZhipuUsageModal() {
+    const modal = document.getElementById('zhipuUsageModal');
+    const form = document.getElementById('zhipuUsageForm');
+    const result = document.getElementById('zhipuUsageResult');
+
+    form.reset();
+    result.style.display = 'none';
+    modal.classList.add('active');
+}
+
+function closeZhipuUsageModal() {
+    const modal = document.getElementById('zhipuUsageModal');
+    modal.classList.remove('active');
+}
+
+async function queryZhipuUsage(e) {
+    e.preventDefault();
+
+    const apiKey = document.getElementById('zhipuApiKey').value;
+    const region = document.getElementById('zhipuRegion').value;
+    const resultDiv = document.getElementById('zhipuUsageResult');
+
+    resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    resultDiv.style.display = 'block';
+
+    try {
+        const response = await fetch(`${API_BASE}/zhipu-usage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiKey, region })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            renderZhipuUsageResult(data);
+        } else {
+            resultDiv.innerHTML = `<div style="text-align: center; color: var(--danger); padding: 20px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 8v4M12 16h.01"/>
+                </svg>
+                <p style="margin-top: 12px;">${data.message || '查询失败'}</p>
+            </div>`;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `<div style="text-align: center; color: var(--danger); padding: 20px;">
+            <p>网络错误，请重试</p>
+        </div>`;
+    }
+}
+
+function renderZhipuUsageResult(data) {
+    const resultDiv = document.getElementById('zhipuUsageResult');
+
+    let html = `<div class="usage-level">📦 ${data.level === 'pro' ? 'Pro 版本' : '标准版本'}</div>`;
+    html += '<div class="usage-plans">';
+
+    data.plans.forEach(plan => {
+        const percentage = plan.used;
+        const statusClass = percentage >= 80 ? 'low' : percentage >= 50 ? 'medium' : 'good';
+        const statusText = percentage >= 80 ? '余额不足' : percentage >= 50 ? '使用中' : '充足';
+
+        html += `
+            <div class="usage-plan">
+                <div class="usage-plan-header">
+                    <div class="usage-plan-name">${plan.name}</div>
+                    <div class="usage-plan-badge ${statusClass}">${statusText}</div>
+                </div>
+                <div class="usage-progress">
+                    <div class="usage-progress-bar ${statusClass}" style="width: ${percentage}%"></div>
+                </div>
+                <div class="usage-info">
+                    <span>已用: ${plan.used}${plan.unit}</span>
+                    <span>剩余: ${plan.remaining}${plan.unit}</span>
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+
+    resultDiv.innerHTML = html;
+}
+
+// 设置智谱额度查询表单
+function setupZhipuUsageForm() {
+    document.getElementById('zhipuUsageForm').addEventListener('submit', queryZhipuUsage);
+
+    // 点击遮罩关闭
+    document.getElementById('zhipuUsageModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeZhipuUsageModal();
+    });
+}
+
 // 导出函数供 HTML 调用
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.editCard = editCard;
 window.deleteCard = deleteCard;
+window.openZhipuUsageModal = openZhipuUsageModal;
+window.closeZhipuUsageModal = closeZhipuUsageModal;

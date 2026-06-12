@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs').promises;
 const path = require('path');
+const axios = require('axios');
 
 const DATA_FILE = path.join(__dirname, '..', 'data', 'balances.json');
 
@@ -146,6 +147,107 @@ router.get('/check-alerts', async (req, res) => {
     res.json({ hasAlerts: alerts.length > 0, alerts });
   } catch (error) {
     res.status(500).json({ error: '检查警告失败' });
+  }
+});
+
+// 查询智谱 Coding Plan 使用情况
+router.post('/zhipu-usage', async (req, res) => {
+  try {
+    const { apiKey, region = 'cn' } = req.body;
+
+    if (!apiKey) {
+      return res.status(400).json({ error: '请提供 API Key' });
+    }
+
+    // 根据区域选择端点
+    const endpoints = {
+      cn: 'https://open.bigmodel.cn/api/monitor/usage/quota/limit',
+      global: 'https://api.z.ai/api/monitor/usage/quota/limit'
+    };
+
+    const endpoint = endpoints[region] || endpoints.cn;
+
+    // 调用智谱 API
+    const response = await axios.get(endpoint, {
+      headers: {
+        'Authorization': apiKey,
+        'Content-Type': 'application/json'
+      },
+      timeout: 10000
+    });
+
+    if (response.data && response.data.success) {
+      const limits = response.data.data.limits || [];
+      const level = response.data.data.level || 'unknown';
+
+      // 解析不同类型的限制
+      const tokenLimits = limits.filter(l => l.type === 'TOKENS_LIMIT');
+      tokenLimits.sort((a, b) => (a.nextResetTime || 0) - (b.nextResetTime || 0));
+
+      const timeLimit = limits.find(l => l.type === 'TIME_LIMIT');
+
+      // 5小时额度（第一个 TOKENS_LIMIT）
+      const hour5 = tokenLimits[0];
+      // 每周额度（第二个 TOKENS_LIMIT）
+      const weekly = tokenLimits[1];
+      // MCP 每月额度
+      const mcp = timeLimit;
+
+      const result = {
+        success: true,
+        level,
+        plans: []
+      };
+
+      // 添加5小时额度
+      if (hour5) {
+        result.plans.push({
+          name: '5小时额度',
+          type: 'hour5',
+          used: hour5.percentage || 0,
+          remaining: 100 - (hour5.percentage || 0),
+          unit: '%',
+          nextResetTime: hour5.nextResetTime
+        });
+      }
+
+      // 添加每周额度
+      if (weekly) {
+        result.plans.push({
+          name: '每周额度',
+          type: 'weekly',
+          used: weekly.percentage || 0,
+          remaining: 100 - (weekly.percentage || 0),
+          unit: '%',
+          nextResetTime: weekly.nextResetTime
+        });
+      }
+
+      // 添加 MCP 每月额度
+      if (mcp) {
+        result.plans.push({
+          name: 'MCP每月',
+          type: 'mcp',
+          used: mcp.currentValue || 0,
+          remaining: mcp.remaining || 0,
+          total: mcp.usage || 1000,
+          unit: '次'
+        });
+      }
+
+      res.json(result);
+    } else {
+      res.status(400).json({
+        error: '查询失败',
+        message: response.data?.msg || '未知错误'
+      });
+    }
+  } catch (error) {
+    console.error('智谱用量查询错误:', error.response?.data || error.message);
+    res.status(500).json({
+      error: '查询失败',
+      message: error.response?.data?.msg || error.message || '网络错误'
+    });
   }
 });
 

@@ -88,6 +88,11 @@
             color: var(--text);
         }
 
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
         .add-btn {
             background: var(--primary);
             color: white;
@@ -431,6 +436,94 @@
             }
         }
 
+        /* 智谱额度查询结果 */
+        .usage-plans {
+            margin-top: 16px;
+        }
+
+        .usage-plan {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .usage-plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .usage-plan-name {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .usage-plan-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .usage-plan-badge.low {
+            background: var(--danger);
+            color: white;
+        }
+
+        .usage-plan-badge.medium {
+            background: var(--warning);
+            color: white;
+        }
+
+        .usage-plan-badge.good {
+            background: var(--success);
+            color: white;
+        }
+
+        .usage-progress {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .usage-progress-bar {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .usage-progress-bar.low {
+            background: var(--danger);
+        }
+
+        .usage-progress-bar.medium {
+            background: var(--warning);
+        }
+
+        .usage-progress-bar.good {
+            background: var(--success);
+        }
+
+        .usage-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .usage-level {
+            text-align: center;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
         /* Responsive */
         @media (max-width: 640px) {
             .cards-grid {
@@ -458,12 +551,20 @@
                 <div class="logo-icon">智</div>
                 <div class="logo-text">智谱余额</div>
             </div>
-            <button class="add-btn" onclick="openModal()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14M5 12h14"/>
-                </svg>
-                添加账户
-            </button>
+            <div class="header-actions">
+                <button class="add-btn" onclick="openZhipuUsageModal()" style="background: var(--success);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    查询额度
+                </button>
+                <button class="add-btn" onclick="openModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    添加账户
+                </button>
+            </div>
         </div>
     </header>
 
@@ -510,6 +611,37 @@
                     <button type="submit" class="btn btn-primary">保存</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- 智谱额度查询 Modal -->
+    <div id="zhipuUsageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">智谱 Coding Plan 额度查询</h3>
+                <button class="modal-close" onclick="closeZhipuUsageModal()">&times;</button>
+            </div>
+            <form id="zhipuUsageForm">
+                <div class="form-group">
+                    <label class="form-label">API Key</label>
+                    <input type="password" class="form-input" id="zhipuApiKey" placeholder="输入智谱 API Key" required>
+                    <div class="form-help">在智谱开放平台获取：https://open.bigmodel.cn/apikeys</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">区域</label>
+                    <select class="form-input" id="zhipuRegion">
+                        <option value="cn">国内版 (open.bigmodel.cn)</option>
+                        <option value="global">国际版 (api.z.ai)</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeZhipuUsageModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">查询</button>
+                </div>
+            </form>
+            <div id="zhipuUsageResult" style="display: none; margin-top: 20px;">
+                <!-- 查询结果将显示在这里 -->
+            </div>
         </div>
     </div>
 
